@@ -200,9 +200,12 @@ INC_FOLDERS += \
 LIB_FILES += \
 
 # Optimization flags
-OPT = -O3 -g3
+#OPT = -O3 -g3
 # Uncomment the line below to enable link time optimization
 #OPT += -flto
+
+# Disable optimization because it breakes debugging
+OPT = -g
 
 # C flags common to all targets
 CFLAGS += $(OPT)
