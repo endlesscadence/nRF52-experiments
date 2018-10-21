@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "name": "pca10059/s140",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/config",
+                "../../nRF5_SDK_15.2.0_9412b96/**",
+                "C:/Program Files (x86)/GNU Tools ARM Embedded/6 2017-q2-update/arm-none-eabi/include",
+                "C:/Program Files (x86)/GNU Tools ARM Embedded/6 2017-q2-update/lib/gcc/arm-none-eabi/6.3.1/include"
+            ],
+            "defines": [
+                "BOARD_PCA10059",
+                "CONFIG_GPIO_AS_PINRESET",
+                "FLOAT_ABI_HARD",
+                "NRF52840_XXAA",
+                "NRF_SD_BLE_API_VERSION=6",
+                "S140",
+                "SOFTDEVICE_PRESENT",
+                "SWI_DISABLE0"
+            ],
+            "compilerPath": "C:/Program Files (x86)/GNU Tools ARM Embedded/6 2017-q2-update/bin/arm-none-eabi-gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

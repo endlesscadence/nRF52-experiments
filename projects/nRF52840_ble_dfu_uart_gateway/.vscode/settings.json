@@ -1,0 +1,9 @@
+{
+    "cortex-debug.openocdPath": "C:/Projects/nRF52-experiments/OpenOCD-master-20181020/bin/openocd.exe",
+    "files.associations": {
+        "ble_lbs.h": "c",
+        "advertising.h": "c",
+        "conn_params.h": "c",
+        "ble_types.h": "c"
+    }
+}
