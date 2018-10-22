@@ -9,6 +9,9 @@
         "error.h": "c",
         "nrf_ble_gatt.h": "c",
         "gatt.h": "c",
-        "nrf_log_default_backends.h": "c"
+        "nrf_log_default_backends.h": "c",
+        "ble_nus.h": "c",
+        "app_uart.h": "c",
+        "nrf_uart.h": "c"
     }
 }
