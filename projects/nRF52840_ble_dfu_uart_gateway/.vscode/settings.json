@@ -4,6 +4,11 @@
         "ble_lbs.h": "c",
         "advertising.h": "c",
         "conn_params.h": "c",
-        "ble_types.h": "c"
+        "ble_types.h": "c",
+        "sdk_errors.h": "c",
+        "error.h": "c",
+        "nrf_ble_gatt.h": "c",
+        "gatt.h": "c",
+        "nrf_log_default_backends.h": "c"
     }
 }

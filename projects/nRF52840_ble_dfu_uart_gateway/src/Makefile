@@ -63,6 +63,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
   $(PROJ_DIR)/main.c \
   $(wildcard $(PROJ_DIR)/ble/*.c) \
+  $(wildcard $(PROJ_DIR)/error/*.c) \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -211,6 +212,7 @@ OPT = -g
 
 # C flags common to all targets
 CFLAGS += $(OPT)
+CFLAGS += -DDEBUG #TODO: remove and add separate debug build target
 CFLAGS += -DBOARD_PCA10059
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD

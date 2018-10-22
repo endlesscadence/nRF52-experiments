@@ -32,87 +32,60 @@
 #include "common.h"
 #include "ble/advertising.h"
 #include "ble/gap.h"
+#include "ble/gatt.h"
 #include "ble/conn_params.h"
 #include "ble/ble_conn.h"
+#include "error/error.h"
 
-#define BUTTON_DETECTION_DELAY          APP_TIMER_TICKS(50)                     /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
+#define BUTTON_DETECTION_DELAY APP_TIMER_TICKS(50)  // Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks).
 
-#define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
+BLE_LBS_DEF(m_lbs);             // LED Button Service instance.
+NRF_BLE_GATT_DEF(m_gatt);       // GATT module instance.
+NRF_BLE_QWR_DEF(m_qwr);         // Context for the Queued Write module.
 
-BLE_LBS_DEF(m_lbs);                                                             /**< LED Button Service instance. */
-NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
-NRF_BLE_QWR_DEF(m_qwr);                                                         /**< Context for the Queued Write module.*/
+static void services_init(void);
+static void timers_init(void);
+static void log_init(void);
+static void power_management_init(void);
+static void led_write_handler(uint16_t conn_handle, ble_lbs_t * p_lbs, uint8_t led_state);
 
-/**@brief Function for assert macro callback.
+/**@brief Function for handling the idle state (main loop).
  *
- * @details This function will be called in case of an assert in the SoftDevice.
- *
- * @warning This handler is an example only and does not fit a final product. You need to analyze
- *          how your product is supposed to react in case of Assert.
- * @warning On assert from the SoftDevice, the system can only recover on reset.
- *
- * @param[in] line_num    Line number of the failing ASSERT call.
- * @param[in] p_file_name File name of the failing ASSERT call.
+ * @details If there is no pending log operation, then sleep until next the next event occurs.
  */
-void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
+static void idle_state_handle(void)
 {
-    app_error_handler(DEAD_BEEF, line_num, p_file_name);
-}
-
-
-/**@brief Function for the Timer initialization.
- *
- * @details Initializes the timer module.
- */
-static void timers_init(void)
-{
-    // Initialize timer module, making it use the scheduler
-    ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
-}
-
-
-/**@brief Function for initializing the GATT module.
- */
-static void gatt_init(void)
-{
-    ret_code_t err_code = nrf_ble_gatt_init(&m_gatt, NULL);
-    APP_ERROR_CHECK(err_code);
-}
-
-
-/**@brief Function for handling Queued Write Module errors.
- *
- * @details A pointer to this function will be passed to each service which may need to inform the
- *          application about an error.
- *
- * @param[in]   nrf_error   Error code containing information about what went wrong.
- */
-static void nrf_qwr_error_handler(uint32_t nrf_error)
-{
-    APP_ERROR_HANDLER(nrf_error);
-}
-
-
-/**@brief Function for handling write events to the LED characteristic.
- *
- * @param[in] p_lbs     Instance of LED Button Service to which the write applies.
- * @param[in] led_state Written/desired state of the LED.
- */
-static void led_write_handler(uint16_t conn_handle, ble_lbs_t * p_lbs, uint8_t led_state)
-{
-    if (led_state)
+    if (NRF_LOG_PROCESS() == false)
     {
-        // bsp_board_led_on(LEDBUTTON_LED);
-        NRF_LOG_INFO("Received LED ON!");
-    }
-    else
-    {
-        // bsp_board_led_off(LEDBUTTON_LED);
-        NRF_LOG_INFO("Received LED OFF!");
+        nrf_pwr_mgmt_run();
     }
 }
 
+/**@brief Function for application main entry.
+ */
+int main(void)
+{
+    // Initialize.
+    log_init();
+    timers_init();
+    power_management_init();
+    ble_stack_init(&m_qwr);
+    gap_params_init();
+    gatt_init(&m_gatt);
+    services_init();
+    advertising_init(m_lbs);
+    conn_params_init();
+
+    // Start execution.
+    NRF_LOG_INFO("Holyiot_BLE_DFU_UART started.");
+    advertising_start();
+
+    // Enter main loop.
+    for (;;)
+    {
+        idle_state_handle();
+    }
+}
 
 /**@brief Function for initializing services that will be used by the application.
  */
@@ -135,6 +108,25 @@ static void services_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
+/**@brief Function for handling write events to the LED characteristic.
+ *
+ * @param[in] p_lbs     Instance of LED Button Service to which the write applies.
+ * @param[in] led_state Written/desired state of the LED.
+ */
+static void led_write_handler(uint16_t conn_handle, ble_lbs_t * p_lbs, uint8_t led_state)
+{
+    if (led_state)
+    {
+        // bsp_board_led_on(LEDBUTTON_LED);
+        NRF_LOG_INFO("Received LED ON!");
+    }
+    else
+    {
+        // bsp_board_led_off(LEDBUTTON_LED);
+        NRF_LOG_INFO("Received LED OFF!");
+    }
+}
+
 static void log_init(void)
 {
     ret_code_t err_code = NRF_LOG_INIT(NULL);
@@ -142,7 +134,6 @@ static void log_init(void)
 
     NRF_LOG_DEFAULT_BACKENDS_INIT();
 }
-
 
 /**@brief Function for initializing power management.
  */
@@ -153,42 +144,13 @@ static void power_management_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-
-/**@brief Function for handling the idle state (main loop).
+/**@brief Function for the Timer initialization.
  *
- * @details If there is no pending log operation, then sleep until next the next event occurs.
+ * @details Initializes the timer module.
  */
-static void idle_state_handle(void)
+static void timers_init(void)
 {
-    if (NRF_LOG_PROCESS() == false)
-    {
-        nrf_pwr_mgmt_run();
-    }
-}
-
-
-/**@brief Function for application main entry.
- */
-int main(void)
-{
-    // Initialize.
-    log_init();
-    timers_init();
-    power_management_init();
-    ble_stack_init(&m_qwr);
-    gap_params_init();
-    gatt_init();
-    services_init();
-    advertising_init(m_lbs);
-    conn_params_init();
-
-    // Start execution.
-    NRF_LOG_INFO("Holyiot_BLE_DFU_UART started.");
-    advertising_start();
-
-    // Enter main loop.
-    for (;;)
-    {
-        idle_state_handle();
-    }
+    // Initialize timer module, making it use the scheduler
+    ret_code_t err_code = app_timer_init();
+    APP_ERROR_CHECK(err_code);
 }

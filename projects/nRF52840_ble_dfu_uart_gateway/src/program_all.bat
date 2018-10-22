@@ -6,6 +6,3 @@ SET PROGRAM=_build/nrf52840_xxaa.hex
 
 ::%OPENOCD%\bin\openocd -s %OPENOCD%/share/openocd/scripts/ -f ../board/nRF52840_openocd.cfg -c init -c "reset init" -c halt -c "nrf5 mass_erase" -c "program %BOOTLOADER% verify" -c "program %SOFTDEVICE% verify" -c "program %PROGRAM% verify reset" -c reset -c exit
 %OPENOCD%\bin\openocd -s %OPENOCD%/share/openocd/scripts/ -f ../board/nRF52840_openocd.cfg -c init -c "reset init" -c halt -c "nrf5 mass_erase" -c "program %SOFTDEVICE% verify" -c "program %PROGRAM% verify reset" -c reset -c exit
-
-
-PAUSE
